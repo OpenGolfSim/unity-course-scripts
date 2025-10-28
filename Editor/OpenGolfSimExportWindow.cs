@@ -185,7 +185,7 @@ public class OpenGolfSimExportWindow : EditorWindow
     
     var assetPaths = AssetDatabase.GetAssetPathsFromAssetBundle(bundleName);
     AssetBundleBuild build = new AssetBundleBuild();
-    build.assetBundleName = bundleName;
+    build.assetBundleName = $"{bundleName}.unity3d";
     build.assetNames = assetPaths;
     builds.Add(build);
     Debug.Log("assetBundle to build:" + build.assetBundleName);

@@ -1,0 +1,12 @@
+{
+  "name": "com.opengolfsim.tools",
+  "version": "0.0.1",
+  "displayName": "OpenGolfSim Tools",
+  "unity": "6000.2",
+  "author": {
+    "email": "help@opengolfsim.com",
+    "name": "OpenGolfSim LLC",
+    "url": "https://opengolfsim.com"
+  },
+  "documentationUrl": "https://help.opengolfsim.com"
+}
