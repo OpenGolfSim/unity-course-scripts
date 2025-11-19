@@ -36,11 +36,12 @@ public class OpenGolfSimImportWindow : EditorWindow
     private void OnGUI()
     {
         GUILayout.BeginHorizontal();
-        GUILayout.FlexibleSpace(); // Pushes the content to the center
-        Texture banner = (Texture)AssetDatabase.LoadAssetAtPath("Assets/Editor/ogs-course-tools.png", typeof(Texture));
-        GUILayout.Box(banner, GUILayout.Width(300), GUILayout.Height(60));
+        GUILayout.FlexibleSpace();
+        Texture banner = (Texture)AssetDatabase.LoadAssetAtPath(OpenGolfSimConstants.BannerPath, typeof(Texture));
+        GUILayout.Box(banner, GUILayout.Width(400), GUILayout.Height(100));
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
+        GUILayout.Space(30);
 
 
         GUILayout.Label("Select Folder Containing OBJ Files", EditorStyles.boldLabel);

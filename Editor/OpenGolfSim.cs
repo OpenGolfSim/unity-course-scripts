@@ -3,22 +3,27 @@ using UnityEditor;
 using System.IO;
 using System.Collections.Generic;
 
+public static class OpenGolfSimConstants
+{
+    public static string BannerPath = "Packages/com.opengolfsim.tools/Editor/ogs_devtools.png";
+}
 
 public class OpenGolfSimMenu : EditorWindow
 {
     
 
+
+    [MenuItem("Tools/OpenGolfSim/Export Course Build")]
+    public static void ShowExportWindow()
+    {
+      GetWindow<OpenGolfSimExportWindow>("OpenGolfSim Dev Toolkit: Export Course Build");
+    }
+
     [MenuItem("Tools/OpenGolfSim/Import Meshes")]
     public static void ShowImportWindow()
     {
-        GetWindow<OpenGolfSimImportWindow>("OpenGolfSim SDK: Import Meshes");
-    }
-
-    [MenuItem("Tools/OpenGolfSim/Course Tools")]
-    public static void ShowExportWindow()
-    {
-      GetWindow<OpenGolfSimExportWindow>("OpenGolfSim SDK: Build Course");
-    }
+        GetWindow<OpenGolfSimImportWindow>("OpenGolfSim Dev Toolkit: Import Meshes");
+    }    
 
     private const string menuPath = "GameObject/OpenGolfSim/Create Course Details";
     [MenuItem(menuPath, false, 10)]
