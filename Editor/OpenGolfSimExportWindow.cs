@@ -1,16 +1,18 @@
 using UnityEngine;
 using UnityEditor;
 using System.IO;
-using System.Collections.Generic;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using Unity.EditorCoroutines.Editor;
 
 
 [Serializable]
 public class CourseDataFile
 {
     public string name;
-    public string course;
-    public string version;
+    public string slug;
+    public int version;
     public string description;
     public int gameMode;
 }
@@ -20,15 +22,17 @@ public class OpenGolfSimExportWindow : EditorWindow
   private int selectedTab = 0;
   private string[] tabNames = { "Course Settings", "Export Course", "Help" };
 
+  private string courseTitle = "";
   private string courseDescription = "";
   int selectedPlatformIndex = 0;
-  int selectedGameMode = 0;
+  int selectedGameMode = 2;
   int selectedBundleIndex = 0;
   private string selectedFolderPath = "";
   // string[] platformNames = {"default (Build Target)", "win64", "osx"};
-  string[] platformNames = {"win64", "osx"};
+  string[] platformNames = {"win64", "macos"};
   string[] gameModes = {"Range", "Range Game", "Course"};
   string[] bundleNames;
+  bool emptyBundleNames = true;
   bool startExport = false;
   bool isExporting = false;
 
@@ -39,41 +43,56 @@ public class OpenGolfSimExportWindow : EditorWindow
 
   private void OnGUI()
   {
-    CourseDataFile data = new CourseDataFile();
     // string version = PlayerSettings.bundleVersion;
 
     GUILayout.BeginHorizontal();
-    GUILayout.FlexibleSpace(); // Pushes the content to the center
+    GUILayout.Space(10);
+    GUILayout.BeginVertical();
+
+    // GUILayout.FlexibleSpace();
+    GUILayout.Space(40);
+    GUIStyle customLabelStyle = new GUIStyle(); 
+    customLabelStyle.fontSize = 16; // Set to your desired font size
+    customLabelStyle.fontStyle = FontStyle.Bold; // Set to your desired font size
+    customLabelStyle.normal.textColor = Color.white; // Example: set text color to red
+
+    GUILayout.Label("Export Course", customLabelStyle);
+    GUILayout.EndVertical();
+
+    // GUILayout.FlexibleSpace();
     Texture banner = (Texture)AssetDatabase.LoadAssetAtPath(OpenGolfSimConstants.BannerPath, typeof(Texture));
-    GUILayout.Box(banner, GUILayout.Width(400), GUILayout.Height(100));
-    GUILayout.FlexibleSpace();
+    GUILayout.Box(banner, GUILayout.Width(240), GUILayout.Height(60));
     GUILayout.EndHorizontal();
+
+    // Draw a horizontal line using a custom style
+    EditorGUILayout.LabelField("", GUI.skin.horizontalSlider); 
+
     GUILayout.Space(30);
 
-
+    
     if (startExport) {
+      
       GUIStyle centeredStyle = new GUIStyle();
       // Set the text alignment to middle center
       centeredStyle.alignment = TextAnchor.MiddleCenter;
       centeredStyle.fontSize = 24;
       centeredStyle.normal.textColor = Color.white;
       centeredStyle.padding = new RectOffset(0, 0, 20, 20);
-
-      // EditorStyles.boldLabel;
-
       GUILayout.Label("Exporting...", centeredStyle);
+
+
       if (!isExporting) {
         isExporting = true;
         Debug.Log("Export start");
-        data.description = courseDescription;
-        ExportStart(platformNames[selectedPlatformIndex], bundleNames[selectedBundleIndex], data);
+        // data.description = courseDescription;
+        EditorCoroutineUtility.StartCoroutine(ExportAll(), this);
       }
       return;
     }
 
     GUILayout.BeginVertical("Box");
 
-    GUILayout.Label("Platform", EditorStyles.boldLabel);
+    GUILayout.Label("Build Settings", EditorStyles.boldLabel);
     // if (GUILayout.Button("Select Option"))
     // {
     //     GenericMenu menu = new GenericMenu();
@@ -82,44 +101,74 @@ public class OpenGolfSimExportWindow : EditorWindow
     //     menu.ShowAsContext();
     // }    
     
+    EditorGUILayout.Space(20);
+
+    GUILayout.BeginHorizontal();
+    GUILayout.Label($"Course Title", GUILayout.Width(200));
+    // use the product name as the default course title
+    courseTitle = GUILayout.TextField(PlayerSettings.productName);
+    // GUILayout.FlexibleSpace();
+    GUILayout.EndHorizontal();
+
+    EditorGUILayout.Space(10);
     
     // selectedPlatformIndex = GUILayout.SelectionGrid(selectedPlatformIndex, platformNames, 1);
-    selectedBundleIndex = EditorGUILayout.Popup("AssetBundle", selectedBundleIndex, bundleNames);
-    selectedPlatformIndex = EditorGUILayout.Popup("Platform", selectedPlatformIndex, platformNames);
-    
-    selectedGameMode = EditorGUILayout.Popup("Game Mode", selectedGameMode, gameModes);
+    GUILayout.BeginHorizontal();
+    GUILayout.Label("Course Slug (AssetBundle)", GUILayout.Width(200));
 
-    EditorGUILayout.Space();
-    if (GUILayout.Button("Select Output Folder"))
-    {
-        string folderPath = EditorUtility.SaveFolderPanel("Select Output Folder", selectedFolderPath, bundleNames[selectedBundleIndex]);
-        if (!string.IsNullOrEmpty(folderPath))
-        {
-            selectedFolderPath = folderPath;
-        }
+    selectedBundleIndex = EditorGUILayout.Popup(selectedBundleIndex, bundleNames);
+    GUILayout.EndHorizontal();
+
+    if (emptyBundleNames) {
+      GUIStyle customStyle = new GUIStyle(); 
+      customStyle.fontSize = 11; // Set to your desired font size
+      // customStyle.fontStyle = FontStyle.Bold; // Set to your desired font size
+      customStyle.normal.textColor = Color.red; // Example: set text color to red
+      customStyle.wordWrap = true;
+
+      GUILayout.Label(
+        "AssetBundle missing! Before you can export your course, you need to set a unique AssetBundle name on the scene you want to export as your course.",
+        customStyle
+      );
     }
-    GUILayout.Label(selectedFolderPath);
+    // selectedPlatformIndex = EditorGUILayout.Popup("Platform", selectedPlatformIndex, platformNames);
+
+    EditorGUILayout.Space(10);
+    
+    GUILayout.BeginHorizontal();
+    GUILayout.Label("Game Mode", GUILayout.Width(200));
+    selectedGameMode = EditorGUILayout.Popup(selectedGameMode, gameModes);
+    GUILayout.EndHorizontal();
+
+    EditorGUILayout.Space(10);
+    
+    GUILayout.BeginHorizontal();
+    GUILayout.Label("Output Folder", GUILayout.Width(200));
+    if (string.IsNullOrEmpty(selectedFolderPath))
+    {
+      if (GUILayout.Button("Select Output Folder"))
+      {
+          string folderPath = EditorUtility.SaveFolderPanel("Select Output Folder", selectedFolderPath, bundleNames[selectedBundleIndex]);
+          if (!string.IsNullOrEmpty(folderPath))
+          {
+              selectedFolderPath = folderPath;
+          }
+      }
+    } else {
+      GUILayout.Label(selectedFolderPath);
+      if (GUILayout.Button("Clear"))
+      {
+        selectedFolderPath = "";
+      }
+    }
+    GUILayout.EndHorizontal();
+
+
+    GUILayout.FlexibleSpace();
 
     
-    EditorGUILayout.Space();
-    
-    GUILayout.Label("Course File", EditorStyles.boldLabel);
-    GUILayout.Label($"Name:", GUILayout.Width(50));
-    GUILayout.Label(PlayerSettings.productName, GUILayout.Width(150));
+    GUI.enabled = !string.IsNullOrEmpty(selectedFolderPath) && !emptyBundleNames;
 
-    GUILayout.Label($"Version: (change in player settings)", GUILayout.Width(50));
-    GUILayout.Label(PlayerSettings.bundleVersion, GUILayout.Width(150));
-
-    EditorGUILayout.Space();
-    GUILayout.Label("Course Description: ");
-    // courseDescription = GUILayout.TextField(courseDescription, GUILayout.Width(150));
-    courseDescription = GUILayout.TextArea(courseDescription, GUILayout.Height(100));
-
-
-    EditorGUILayout.Space();
-
-    
-    GUI.enabled = !string.IsNullOrEmpty(selectedFolderPath);
 
     if (GUILayout.Button("Export"))
     {
@@ -160,19 +209,48 @@ public class OpenGolfSimExportWindow : EditorWindow
       bundleNames = AssetDatabase.GetAllAssetBundleNames();
       if (bundleNames.Length == 0)
       {
-          bundleNames = new string[] { "No AssetBundles found" };
+        emptyBundleNames = true;
+        bundleNames = new string[] { "No AssetBundles found" };
+      } else {
+        emptyBundleNames = false;
       }
       selectedPlatformIndex = 0;
       selectedBundleIndex = 0;
   }
 
-  void ExportStart(string targetPlatform, string bundleName, CourseDataFile data) {
+  IEnumerator ExportAll() {
+    yield return null;
+    // export one per platform
+    string bundleName = bundleNames[selectedBundleIndex];
+    foreach (var platform in platformNames)
+    {
+      ExportStart(platform, bundleName);
+    }
+
+    CourseDataFile data = new CourseDataFile();
+    data.slug = bundleName.ToLower();
+    data.version = 1;
+    data.description = $"This course file was generated with OGS Developer Toolkit";
+    data.name = courseTitle;
+    data.gameMode = selectedGameMode;
+
+    string jsonString = JsonUtility.ToJson(data, true);
+
+    string courseJSONFilePath = Path.Combine(selectedFolderPath, "course.json");
+    File.WriteAllText(courseJSONFilePath, jsonString);
+    Debug.Log($"Export Complete! Wrote course file to: {selectedFolderPath}");
+
+    isExporting = false;
+    startExport = false;    
+  }
+
+  void ExportStart(string targetPlatform, string bundleName) {
     
 
     BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
     if (targetPlatform == "win64") {
       target = BuildTarget.StandaloneWindows64;
-    } else if (targetPlatform == "osx") {
+    } else if (targetPlatform == "macos") {
       target = BuildTarget.StandaloneOSX;
     }
     // string assetBundleDirectory = "Assets/AssetBundles";
@@ -186,7 +264,7 @@ public class OpenGolfSimExportWindow : EditorWindow
     
     var assetPaths = AssetDatabase.GetAssetPathsFromAssetBundle(bundleName);
     AssetBundleBuild build = new AssetBundleBuild();
-    build.assetBundleName = $"{bundleName}.unity3d";
+    build.assetBundleName = $"{bundleName}.{targetPlatform}.unity3d";
     build.assetNames = assetPaths;
     builds.Add(build);
     Debug.Log("assetBundle to build:" + build.assetBundleName);
@@ -202,18 +280,6 @@ public class OpenGolfSimExportWindow : EditorWindow
     // );
     Debug.Log($"AssetBundles built with target {target} to: " + selectedFolderPath);
 
-    data.course = bundleName;
-    data.version = PlayerSettings.bundleVersion;
-    data.name = PlayerSettings.productName;
-    data.gameMode = selectedGameMode;
-
-    string jsonString = JsonUtility.ToJson(data, true);
-
-    string courseJSONFilePath = Path.Combine(selectedFolderPath, "course.json");
-    File.WriteAllText(courseJSONFilePath, jsonString);
-    Debug.Log($"Wrote course file (v{data.version}) to: " + courseJSONFilePath);
-
-    isExporting = false;
-    startExport = false;
+    
   }
 }

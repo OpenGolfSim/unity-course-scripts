@@ -37,7 +37,7 @@ public class OGSCourse : MonoBehaviour
   public bool snapToGroundOnEdit = true;
 
   [Tooltip("Maximum distance (up/down) to search for ground when snapping the Y coordinate.")]
-  public float groundSnapMaxDistance = 50f;
+  public float groundSnapMaxDistance = 100.0f;
 
   [Tooltip("Layer mask used when raycasting to find ground height. Use this to limit snapping to terrain/colliders.")]
   public LayerMask groundLayerMask = ~0; // default to everything

@@ -110,7 +110,7 @@ public class HolePropertyDrawer : PropertyDrawer
 [CustomEditor(typeof(OGSCourse))]
 public class OpenGolfSimCourseSetup : Editor
 {
-    private float holeRadius = 1.0f;
+    private float holeRadius = 1.5f;
     SerializedProperty holeCountProp;
     SerializedProperty holesProp;
     SerializedProperty snapToGroundProp;
@@ -145,26 +145,26 @@ public class OpenGolfSimCourseSetup : Editor
         // Small utility buttons
         EditorGUILayout.BeginHorizontal();
         
-        if (GUILayout.Button("Reset Hole Names"))
-        {
-            for (int i = 0; i < holesProp.arraySize; i++)
-            {
-                SerializedProperty hole = holesProp.GetArrayElementAtIndex(i);
-                hole.FindPropertyRelative("name").stringValue = $"Hole {i + 1}";
-            }
-        }
-        if (GUILayout.Button("Set Typical Pars (3-4-5 pattern)"))
-        {
-            for (int i = 0; i < holesProp.arraySize; i++)
-            {
-                SerializedProperty hole = holesProp.GetArrayElementAtIndex(i);
-                int par = 4;
-                if ((i % 3) == 0) par = 4;
-                else if ((i % 3) == 1) par = 3;
-                else par = 5;
-                hole.FindPropertyRelative("par").intValue = par;
-            }
-        }
+        // if (GUILayout.Button("Reset Hole Names"))
+        // {
+        //     for (int i = 0; i < holesProp.arraySize; i++)
+        //     {
+        //         SerializedProperty hole = holesProp.GetArrayElementAtIndex(i);
+        //         hole.FindPropertyRelative("name").stringValue = $"Hole {i + 1}";
+        //     }
+        // }
+        // if (GUILayout.Button("Set Typical Pars (3-4-5 pattern)"))
+        // {
+        //     for (int i = 0; i < holesProp.arraySize; i++)
+        //     {
+        //         SerializedProperty hole = holesProp.GetArrayElementAtIndex(i);
+        //         int par = 4;
+        //         if ((i % 3) == 0) par = 4;
+        //         else if ((i % 3) == 1) par = 3;
+        //         else par = 5;
+        //         hole.FindPropertyRelative("par").intValue = par;
+        //     }
+        // }
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.Space();
@@ -208,17 +208,20 @@ public class OpenGolfSimCourseSetup : Editor
             Vector3 holeWorld = t.TransformPoint(holeLocal);
             Vector3 aimWorld = t.TransformPoint(aimLocal);
 
+
+            Color handleColor = new Color(1.0f, 0.3f, 0.0f);
             // Handles.color = Color.Lerp(Color.green, Color.red, 0.5f);
             // Handles.DrawLine(teeWorld, holeWorld);
-            Handles.color = Color.yellow;
+            Handles.color = handleColor;
+
             if (hasAimPoint)
             {
-                Handles.DrawDottedLine(teeWorld, aimWorld, 4f);
-                Handles.DrawDottedLine(aimWorld, holeWorld, 4f);
+                Handles.DrawLine(teeWorld, aimWorld, 2f);
+                Handles.DrawLine(aimWorld, holeWorld, 2f);
             }
             else
             {
-                Handles.DrawLine(teeWorld, holeWorld);
+                Handles.DrawLine(teeWorld, holeWorld, 2.0f);
             }
 
             // Tee handle
@@ -260,7 +263,7 @@ public class OpenGolfSimCourseSetup : Editor
             }
 
             // Hole handle
-            Handles.color = new Color(0.9f, 0.3f, 0.3f);
+            Handles.color = new Color(1.0f, 0.3f, 0.0f);
             EditorGUI.BeginChangeCheck();
             Vector3 newHoleWorld = Handles.PositionHandle(holeWorld, Quaternion.identity);
             if (EditorGUI.EndChangeCheck())
@@ -276,11 +279,17 @@ public class OpenGolfSimCourseSetup : Editor
                 serializedObject.ApplyModifiedProperties();
             }
 
-            Handles.color = new Color(1f, 0.5f, 0.2f, 0.3f);
-            Handles.DrawSolidDisc(t.TransformPoint(holeLocal), Vector3.up, Mathf.Max(0.01f, holeRadius));
+            // Handles.color = new Color(1f, 0.5f, 0.2f, 0.3f);
+            Handles.color = new Color(1.0f, 0.4f, 0f, 0.25f);
+            Handles.DrawSolidDisc(t.TransformPoint(holeLocal), Vector3.up, holeRadius);
+            if (hasAimPoint) {
+                Handles.DrawSolidDisc(t.TransformPoint(aimLocal), Vector3.up, holeRadius);
+            }
+            Handles.DrawSolidDisc(t.TransformPoint(teeLocal), Vector3.up, holeRadius);
 
             Handles.color = Color.green;
             Handles.DotHandleCap(0, t.TransformPoint(teeLocal), Quaternion.identity, 0.1f, EventType.Repaint);
+            
 
             if (hasAimPoint)
             {
@@ -288,8 +297,8 @@ public class OpenGolfSimCourseSetup : Editor
                 Handles.DotHandleCap(0, t.TransformPoint(aimLocal), Quaternion.identity, 0.09f, EventType.Repaint);
             }
 
-            Handles.color = Color.red;
             Handles.DotHandleCap(0, t.TransformPoint(holeLocal), Quaternion.identity, 0.1f, EventType.Repaint);
+            // Handles.Disc(0, Quaternion.identity, t.TransformPoint(holeLocal), 0.1f, EventType.Repaint);
 
             Vector3 labelPos = (t.TransformPoint(teeLocal) + t.TransformPoint(holeLocal)) * 0.5f;
             float distanceMeters = Vector3.Distance(newTeeWorld, newHoleWorld);
@@ -297,11 +306,17 @@ public class OpenGolfSimCourseSetup : Editor
             GUIStyle labelStyle = new GUIStyle();
             labelStyle.normal.textColor = Color.white;
             labelStyle.fontStyle = FontStyle.Bold;
-            Handles.Label(t.TransformPoint(teeLocal) + Vector3.up * 0.5f, $"#{i + 1} Tee\nPar {par}", labelStyle);
-            Handles.Label(t.TransformPoint(holeLocal) + Vector3.up * 0.5f, $"#{i + 1} Hole\nPar {par}", labelStyle);            
+            Handles.Label(t.TransformPoint(teeLocal) + Vector3.up * 0.5f, $"Tee Box {i + 1}\n{Mathf.Round(MetersToYards(distanceMeters))} yd", labelStyle);
+            Handles.Label(t.TransformPoint(holeLocal) + Vector3.up * 0.5f, $"Hole {i + 1}\nPar {par}", labelStyle);
 
-            string lineLabel = $"Hole {i + 1}\n{Mathf.Round(MetersToYards(distanceMeters))} yd";
             
+            GUIStyle boxStyle = EditorStyles.helpBox;
+            boxStyle.normal.textColor = Color.white;
+            boxStyle.fontStyle = FontStyle.Bold;
+            boxStyle.fontSize = 10;
+
+            string lineLabel = $"{Mathf.Round(MetersToYards(distanceMeters))} yd";
+
             if (hasAimPoint) {
                 labelPos = (t.TransformPoint(aimLocal) + t.TransformPoint(holeLocal)) * 0.5f;
                 Vector3 aimLabelPos = (t.TransformPoint(teeLocal) + t.TransformPoint(aimLocal)) * 0.5f;
@@ -309,13 +324,15 @@ public class OpenGolfSimCourseSetup : Editor
                 float distanceToAimMeters = Vector3.Distance(newTeeWorld, newAimWorld);
                 float distanceToHoleMeters = Vector3.Distance(newAimWorld, newHoleWorld);
 
-                Handles.Label(t.TransformPoint(aimLocal) + Vector3.up * 0.5f, $"#{i + 1} Aim Point", labelStyle);
-                Handles.Label(aimLabelPos + Vector3.up * 0.8f, $"Hole {i + 1}\n{Mathf.Round(MetersToYards(distanceToAimMeters))} yd", EditorStyles.helpBox);
+                Handles.Label(t.TransformPoint(aimLocal) + Vector3.up * 0.5f, $"Aim Point {i + 1}", labelStyle);
+                // info box between points
+                Handles.Label(aimLabelPos + Vector3.up * 0.8f, $"{Mathf.Round(MetersToYards(distanceToAimMeters))} yd", boxStyle);
                 
-                lineLabel = $"Hole {i + 1}\n{Mathf.Round(MetersToYards(distanceToHoleMeters))} yd";
+                lineLabel = $"{Mathf.Round(MetersToYards(distanceToHoleMeters))} yd";
             }
             
-            Handles.Label(labelPos + Vector3.up * 0.8f, lineLabel, EditorStyles.helpBox);
+            // info box between points
+            Handles.Label(labelPos + Vector3.up * 0.8f, lineLabel, boxStyle);
 
         }
 

@@ -1,6 +1,6 @@
 {
   "name": "com.opengolfsim.tools",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "displayName": "OpenGolfSim Tools",
   "unity": "6000.2",
   "unityRelease": "6f2",
@@ -8,6 +8,9 @@
     "email": "help@opengolfsim.com",
     "name": "OpenGolfSim LLC",
     "url": "https://opengolfsim.com"
+  },
+  "dependencies": {
+    "com.unity.editorcoroutines": "1.0.1"
   },
   "documentationUrl": "https://help.opengolfsim.com"
 }

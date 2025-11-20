@@ -1,7 +1,8 @@
 {
   "name": "OpenGolfSim.Tools.Editor",
   "references": [
-    "OpenGolfSim.Tools"
+    "OpenGolfSim.Tools",
+    "Unity.EditorCoroutines.Editor"
   ],
   "optionalUnityReferences": [],
   "includePlatforms": [
