@@ -1,27 +1,25 @@
-# OpenGolfSim Unity SDK
+# OpenGolfSim Course Developer Toolkit
 
-This repository contains our Unity editor scripts for course building.
+This repository contains our Unity package for editor and runtime scripts and assets for building courses for [OpenGolfSim](https://opengolfsim.com).
+
+If you are new to course building, head over to our [help docs](https://help.opengolfsim.com) to learn more.
 
 ## How to use
 
-Drag these scripts to your project by adding them to your `./Assets/` folder. 
+Most users won't need to install this package directly. It's already included in our [Unity Project Template](https://github.com/OpenGolfSim/unity-project-template). However, may need to periodically update this package to the latest version within your Unity project using the **Package Manager**.
 
-> [!NOTE]  
-> You may need to create the `Editor` and `Scripts` folders if they doesn't exist in your Unity Project.
+For advanced users, you can install this package into a Unity project using the Package Manager.
 
-### Mesh Import
+1. Open Unity's package manager by selecting **Window** > **Package Management** > **Package Manager**
 
-You can import your cut and conformed meshes into your course project using our import tool.
+2. Select the add package (`+`) button and select **Install package from git URL...**
 
-1. Select the parent folder of your mesh files and import
-2. Batch assign materials to surfaces (i.e. rough, fairway, green, etc.)
-3. Click import to add your meshes to the scene with the assigned materials
+3. Enter the following git repository url (including the `.git` extension):
 
-### Course POIs
+    ```
+    https://github.com/OpenGolfSim/unity-course-scripts.git
+    ```
+4. Click **Install**
 
-1. Create a new Course Details game object (New > OpenGolfSim > Course Details)
-2. Create holes and position tee, hole, and optional aim point.
+5. You should now see a new **OpenGolfSim** menu under the **Tools** menu.
 
-### Course Export
-
-To test or play your course in OpenGolfSim, you'll first need to export your course as an asset bundle using our course building tool.
