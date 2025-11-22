@@ -17,6 +17,7 @@ public class HolePropertyDrawer : PropertyDrawer
         // fetch sub-properties
         SerializedProperty nameProp = property.FindPropertyRelative("name");
         SerializedProperty teeProp = property.FindPropertyRelative("teeLocalPosition");
+        SerializedProperty teeGreenProp = property.FindPropertyRelative("teeGreenPosition");
         SerializedProperty holePosProp = property.FindPropertyRelative("holeLocalPosition");
         SerializedProperty hasAimPoint = property.FindPropertyRelative("hasAimPoint");
         SerializedProperty aimPosProp = property.FindPropertyRelative("aimLocalPosition");
@@ -49,12 +50,17 @@ public class HolePropertyDrawer : PropertyDrawer
 
             // Tee position
             Rect teeRect = new Rect(position.x, y, position.width, line);
-            EditorGUI.PropertyField(teeRect, teeProp, new GUIContent("Tee Position (local)"));
+            EditorGUI.PropertyField(teeRect, teeProp, new GUIContent("White Tees"));
+            y += line + pad;
+
+            // Green/Par3 tee position
+            Rect teeGreenRect = new Rect(position.x, y, position.width, line);
+            EditorGUI.PropertyField(teeGreenRect, teeGreenProp, new GUIContent("Green Tees"));
             y += line + pad;
 
             // Hole position
             Rect holeRect = new Rect(position.x, y, position.width, line);
-            EditorGUI.PropertyField(holeRect, holePosProp, new GUIContent("Hole Position (local)"));
+            EditorGUI.PropertyField(holeRect, holePosProp, new GUIContent("Hole"));
             y += line + pad;
 
             // Par
@@ -70,7 +76,7 @@ public class HolePropertyDrawer : PropertyDrawer
             if (hasAimPoint.boolValue) {
                 // Aim position
                 Rect aimRect = new Rect(position.x, y, position.width, line);
-                EditorGUI.PropertyField(aimRect, aimPosProp, new GUIContent("Aim Position (local)"));
+                EditorGUI.PropertyField(aimRect, aimPosProp, new GUIContent("Aim Point"));
             }
             y += line + pad;
             // // Radius
@@ -111,7 +117,13 @@ public class HolePropertyDrawer : PropertyDrawer
 public class OpenGolfSimCourseSetup : Editor
 {
     private float holeRadius = 1.5f;
-    SerializedProperty holeCountProp;
+    
+    private Color goldColor = new Color(1.0f, 0.7f, 0f, 0.8f);
+    private Color greenColor = new Color(0f, 0.5f, 0f, 0.9f);
+    private Color greyColor = new Color(0.75f, 0.75f, 0.75f, 0.8f);
+    private Color blueColor = new Color(0f, 0.45f, 1.0f, 0.8f);
+
+    // SerializedProperty holeCountProp;
     SerializedProperty holesProp;
     SerializedProperty snapToGroundProp;
     SerializedProperty groundSnapMaxDistanceProp;
@@ -119,7 +131,7 @@ public class OpenGolfSimCourseSetup : Editor
 
     private void OnEnable()
     {
-        holeCountProp = serializedObject.FindProperty("holeCount");
+        // holeCountProp = serializedObject.FindProperty("holeCount");
         holesProp = serializedObject.FindProperty("holes");
 
         snapToGroundProp = serializedObject.FindProperty("snapToGroundOnEdit");
@@ -131,7 +143,7 @@ public class OpenGolfSimCourseSetup : Editor
     {
         serializedObject.Update();
 
-        EditorGUILayout.PropertyField(holeCountProp);
+        // EditorGUILayout.PropertyField(holeCountProp);
 
         EditorGUILayout.Space();
 
@@ -189,6 +201,7 @@ public class OpenGolfSimCourseSetup : Editor
         {
             SerializedProperty holeProp = holesProp.GetArrayElementAtIndex(i);
             SerializedProperty teeProp = holeProp.FindPropertyRelative("teeLocalPosition");
+            SerializedProperty teeGreenProp = holeProp.FindPropertyRelative("teeGreenPosition");
             SerializedProperty holePosProp = holeProp.FindPropertyRelative("holeLocalPosition");
             SerializedProperty parProp = holeProp.FindPropertyRelative("par");
             SerializedProperty nameProp = holeProp.FindPropertyRelative("name");
@@ -199,33 +212,39 @@ public class OpenGolfSimCourseSetup : Editor
             bool hasAimPoint = hasAimPointProp != null && hasAimPointProp.boolValue;
 
             Vector3 teeLocal = teeProp.vector3Value;
+            Vector3 teeGreenPosition = teeGreenProp.vector3Value;
+
             Vector3 holeLocal = holePosProp.vector3Value;
             // float radius = radiusProp.floatValue;
             int par = parProp.intValue;
             string name = nameProp.stringValue;
 
             Vector3 teeWorld = t.TransformPoint(teeLocal);
+            Vector3 teeGreenWorld = t.TransformPoint(teeGreenPosition);
             Vector3 holeWorld = t.TransformPoint(holeLocal);
             Vector3 aimWorld = t.TransformPoint(aimLocal);
 
 
-            Color handleColor = new Color(1.0f, 0.3f, 0.0f);
-            // Handles.color = Color.Lerp(Color.green, Color.red, 0.5f);
-            // Handles.DrawLine(teeWorld, holeWorld);
-            Handles.color = handleColor;
-
+            Handles.color = goldColor;
             if (hasAimPoint)
             {
+                Handles.color = greyColor;
                 Handles.DrawLine(teeWorld, aimWorld, 2f);
+                Handles.color = greenColor;
+                Handles.DrawLine(teeGreenWorld, holeWorld, 2f);
+                Handles.color = goldColor;
                 Handles.DrawLine(aimWorld, holeWorld, 2f);
             }
             else
             {
-                Handles.DrawLine(teeWorld, holeWorld, 2.0f);
+                Handles.color = greyColor;
+                Handles.DrawLine(teeWorld, holeWorld, 2f);
+                Handles.color = greenColor;
+                Handles.DrawLine(teeGreenWorld, holeWorld, 2f);
             }
 
             // Tee handle
-            Handles.color = new Color(0.2f, 0.8f, 0.2f);
+            // Handles.color = new Color(0.2f, 0.8f, 0.2f);
             EditorGUI.BeginChangeCheck();
             Vector3 newTeeWorld = Handles.PositionHandle(teeWorld, Quaternion.identity);
             if (EditorGUI.EndChangeCheck())
@@ -241,11 +260,28 @@ public class OpenGolfSimCourseSetup : Editor
                 serializedObject.ApplyModifiedProperties();
             }
 
+            // Tee handle
+            // Handles.color = new Color(0.2f, 0.8f, 0.2f);
+            EditorGUI.BeginChangeCheck();
+            Vector3 newTeeGreenWorld = Handles.PositionHandle(teeGreenWorld, Quaternion.identity);
+            if (EditorGUI.EndChangeCheck())
+            {
+                if (gc.snapToGroundOnEdit)
+                {
+                    float snappedY = GetGroundY(newTeeGreenWorld, gc);
+                    newTeeGreenWorld.y = snappedY;
+                }
+
+                Undo.RecordObject(gc, $"Move green tee for {name}");
+                teeGreenProp.vector3Value = t.InverseTransformPoint(newTeeGreenWorld);
+                serializedObject.ApplyModifiedProperties();
+            }
+
             // Aim handle (blue) - only if useAim enabled
             Vector3 newAimWorld = Vector3.zero;
             if (hasAimPoint)
             {
-                Handles.color = new Color(0.2f, 0.5f, 1f);
+                // Handles.color = new Color(0.2f, 0.5f, 1f);
                 EditorGUI.BeginChangeCheck();
                 newAimWorld = Handles.PositionHandle(aimWorld, Quaternion.identity);
                 if (EditorGUI.EndChangeCheck())
@@ -274,65 +310,84 @@ public class OpenGolfSimCourseSetup : Editor
                     newHoleWorld.y = snappedY;
                 }
 
-                Undo.RecordObject(gc, $"Move Pin for {name}");
+                Undo.RecordObject(gc, $"Move Hole for {name}");
                 holePosProp.vector3Value = t.InverseTransformPoint(newHoleWorld);
                 serializedObject.ApplyModifiedProperties();
             }
 
-            // Handles.color = new Color(1f, 0.5f, 0.2f, 0.3f);
-            Handles.color = new Color(1.0f, 0.4f, 0f, 0.25f);
+            Handles.color = goldColor;
             Handles.DrawSolidDisc(t.TransformPoint(holeLocal), Vector3.up, holeRadius);
             if (hasAimPoint) {
+                Handles.color = blueColor;
                 Handles.DrawSolidDisc(t.TransformPoint(aimLocal), Vector3.up, holeRadius);
             }
+            Handles.color = greyColor;
             Handles.DrawSolidDisc(t.TransformPoint(teeLocal), Vector3.up, holeRadius);
+            Handles.color = greenColor;
+            Handles.DrawSolidDisc(t.TransformPoint(teeGreenPosition), Vector3.up, holeRadius);
 
-            Handles.color = Color.green;
-            Handles.DotHandleCap(0, t.TransformPoint(teeLocal), Quaternion.identity, 0.1f, EventType.Repaint);
+            // Handles.color = Color.blue;
+            // // Handles.color = Color.green;
+            // Handles.DotHandleCap(0, t.TransformPoint(teeLocal), Quaternion.identity, 0.1f, EventType.Repaint);
+            // Handles.DotHandleCap(0, t.TransformPoint(teeGreenPosition), Quaternion.identity, 0.1f, EventType.Repaint);
+            // if (hasAimPoint)
+            // {
+            //     Handles.color = new Color(0.2f, 0.5f, 1f);
+            //     Handles.DotHandleCap(0, t.TransformPoint(aimLocal), Quaternion.identity, 0.09f, EventType.Repaint);
+            // }
+            // Handles.DotHandleCap(0, t.TransformPoint(holeLocal), Quaternion.identity, 0.1f, EventType.Repaint);
             
-
-            if (hasAimPoint)
-            {
-                Handles.color = new Color(0.2f, 0.5f, 1f);
-                Handles.DotHandleCap(0, t.TransformPoint(aimLocal), Quaternion.identity, 0.09f, EventType.Repaint);
-            }
-
-            Handles.DotHandleCap(0, t.TransformPoint(holeLocal), Quaternion.identity, 0.1f, EventType.Repaint);
-            // Handles.Disc(0, Quaternion.identity, t.TransformPoint(holeLocal), 0.1f, EventType.Repaint);
 
             Vector3 labelPos = (t.TransformPoint(teeLocal) + t.TransformPoint(holeLocal)) * 0.5f;
             float distanceMeters = Vector3.Distance(newTeeWorld, newHoleWorld);
+            float distanceGreenMeters = Vector3.Distance(newTeeGreenWorld, newHoleWorld);
 
             GUIStyle labelStyle = new GUIStyle();
-            labelStyle.normal.textColor = Color.white;
             labelStyle.fontStyle = FontStyle.Bold;
-            Handles.Label(t.TransformPoint(teeLocal) + Vector3.up * 0.5f, $"Tee Box {i + 1}\n{Mathf.Round(MetersToYards(distanceMeters))} yd", labelStyle);
-            Handles.Label(t.TransformPoint(holeLocal) + Vector3.up * 0.5f, $"Hole {i + 1}\nPar {par}", labelStyle);
+            labelStyle.fontSize = 10;
+            
+            labelStyle.normal.textColor = Color.white;
+            Handles.Label(t.TransformPoint(teeLocal) + Vector3.up * 0.5f, $"{i + 1} White Tee\n{Mathf.Round(MetersToYards(distanceMeters))} yd", labelStyle);
+            
+            labelStyle.normal.textColor = Color.white;
+            Handles.Label(t.TransformPoint(teeGreenPosition) + Vector3.up * 0.5f, $"#{i + 1} Green Tee\n{Mathf.Round(MetersToYards(distanceGreenMeters))} yd", labelStyle);
+
+            labelStyle.normal.textColor = Color.white;
+            Handles.Label(t.TransformPoint(holeLocal) + Vector3.up * 0.5f, $"#{i + 1} Hole\nPar {par}", labelStyle);
 
             
             GUIStyle boxStyle = EditorStyles.helpBox;
             boxStyle.normal.textColor = Color.white;
             boxStyle.fontStyle = FontStyle.Bold;
-            boxStyle.fontSize = 10;
+            boxStyle.fontSize = 9;
+            boxStyle.padding = new RectOffset(2, 2, 2, 2);
 
             string lineLabel = $"{Mathf.Round(MetersToYards(distanceMeters))} yd";
+
+            Vector3 greenLabelPos = (t.TransformPoint(teeGreenPosition) + t.TransformPoint(holeLocal)) * 0.5f;
+            string lineGreenLabel = $"{Mathf.Round(MetersToYards(distanceGreenMeters))} yd";
 
             if (hasAimPoint) {
                 labelPos = (t.TransformPoint(aimLocal) + t.TransformPoint(holeLocal)) * 0.5f;
                 Vector3 aimLabelPos = (t.TransformPoint(teeLocal) + t.TransformPoint(aimLocal)) * 0.5f;
 
                 float distanceToAimMeters = Vector3.Distance(newTeeWorld, newAimWorld);
+                float greenDistanceToAimMeters = Vector3.Distance(newTeeGreenWorld, newAimWorld);
                 float distanceToHoleMeters = Vector3.Distance(newAimWorld, newHoleWorld);
 
-                Handles.Label(t.TransformPoint(aimLocal) + Vector3.up * 0.5f, $"Aim Point {i + 1}", labelStyle);
+                labelStyle.normal.textColor = Color.blue;
+                Handles.Label(t.TransformPoint(aimLocal) + Vector3.up * 0.5f, $"#{i + 1} Aim Point", labelStyle);
                 // info box between points
                 Handles.Label(aimLabelPos + Vector3.up * 0.8f, $"{Mathf.Round(MetersToYards(distanceToAimMeters))} yd", boxStyle);
+                // Handles.Label(aimGreenLabelPos + Vector3.up * 0.8f, $"{Mathf.Round(MetersToYards(greenDistanceToAimMeters))} yd", boxStyle);
                 
                 lineLabel = $"{Mathf.Round(MetersToYards(distanceToHoleMeters))} yd";
+                // lineGreenLabel = lineLabel;
             }
             
             // info box between points
             Handles.Label(labelPos + Vector3.up * 0.8f, lineLabel, boxStyle);
+            Handles.Label(greenLabelPos + Vector3.up * 0.8f, lineGreenLabel, boxStyle);
 
         }
 
