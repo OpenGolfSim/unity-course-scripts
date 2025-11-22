@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 
 [System.Serializable]
-public class OGSCourseHole
+public class OGSCourseDataHole
 {
     public string name = "Hole";
     [Tooltip("Tee position, local to the parent GameObject's transform.")]
@@ -22,7 +22,7 @@ public class OGSCourseHole
 
 }
 
-public class OGSCourse : MonoBehaviour
+public class OGSCourseData : MonoBehaviour
 {
   [Header("Course Settings")]
   [Range(1, 18)]
@@ -30,7 +30,7 @@ public class OGSCourse : MonoBehaviour
   public int holeCount = 18;
   
   [Tooltip("List of holes. Positions are stored as local positions relative to the GameObject this component is attached to.")]
-  public List<OGSCourseHole> holes = new List<OGSCourseHole>();
+  public List<OGSCourseDataHole> holes = new List<OGSCourseDataHole>();
 
   [Header("Ground Snapping (Editor)")]
   [Tooltip("When true, the editor will snap hole tee/pin Y position to the nearest collider within the max distance.")]

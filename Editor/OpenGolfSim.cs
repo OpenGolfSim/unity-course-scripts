@@ -30,10 +30,10 @@ public class OpenGolfSimMenu : EditorWindow
     private static void Create(MenuCommand menuCommand)
     {
         // Create root GameObject
-        GameObject go = new GameObject("OGSCourseDetails");
+        GameObject go = new GameObject("OGSCourseData");
 
         // Add the custom runtime component
-        go.AddComponent<OGSCourse>();
+        go.AddComponent<OGSCourseData>();
 
         // If the menu was invoked from a context (like creating as child), parent appropriately
         GameObject parent = menuCommand.context as GameObject;

@@ -9,7 +9,7 @@ using UnityEngine;
 /// This allows the default array UI (add/remove/reorder) to remain available.
 /// Put this file in an Editor folder (e.g. Assets/Editor).
 /// </summary>
-[CustomPropertyDrawer(typeof(OGSCourseHole))]
+[CustomPropertyDrawer(typeof(OGSCourseDataHole))]
 public class HolePropertyDrawer : PropertyDrawer
 {
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -103,11 +103,11 @@ public class HolePropertyDrawer : PropertyDrawer
     }
 }
 /// <summary>
-/// Custom editor for OGSCourse. Draws interactive handles in Scene view to move tee and hole positions
+/// Custom editor for OGSCourseData. Draws interactive handles in Scene view to move tee and hole positions
 /// without instantiating extra GameObjects. Uses SerializedProperty so changes are undoable and prefab-friendly.
 /// Put this file in an Editor folder (e.g. Assets/Editor).
 /// </summary>
-[CustomEditor(typeof(OGSCourse))]
+[CustomEditor(typeof(OGSCourseData))]
 public class OpenGolfSimCourseSetup : Editor
 {
     private float holeRadius = 1.5f;
@@ -178,7 +178,7 @@ public class OpenGolfSimCourseSetup : Editor
     // Scene GUI for interactive positioning
     private void OnSceneGUI()
     {
-        OGSCourse gc = (OGSCourse)target;
+        OGSCourseData gc = (OGSCourseData)target;
 
         // Make sure we have up-to-date serialized properties
         serializedObject.Update();
@@ -342,7 +342,7 @@ public class OpenGolfSimCourseSetup : Editor
     {
         return meters * 1.09361f;
     }
-    private float GetGroundY(Vector3 worldPosition, OGSCourse gc)
+    private float GetGroundY(Vector3 worldPosition, OGSCourseData gc)
     {
         // Use the LayerMask value stored on the component
         int mask = (gc.groundLayerMask).value;
