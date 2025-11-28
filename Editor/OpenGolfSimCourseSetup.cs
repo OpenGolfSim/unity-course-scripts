@@ -99,7 +99,7 @@ public class HolePropertyDrawer : PropertyDrawer
             // fold + name + tee + useAim + (aim?) + hole + par + radius + paddings
             SerializedProperty useAimProp = property.FindPropertyRelative("hasAimPoint");
             bool useAim = useAimProp != null && useAimProp.boolValue;
-            int lines = 1 + 1 + 1 + (useAim ? 1 : 0) + 1 + 1 + 1; // fold not counted separately here
+            int lines = 1 + 1 + 1 + (useAim ? 1 : 0) + 1 + 1 + 1 + 1; // fold not counted separately here
             return line * lines + pad * (lines);
         }
         else
