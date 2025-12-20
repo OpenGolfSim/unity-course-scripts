@@ -26,14 +26,14 @@ public class OpenGolfSimImportWindow : EditorWindow
     private void OnEnable()
     {
         // Load default materials (update the path as needed)
-        fairwayMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Grass/Fairway.mat");
-        fringeMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Grass/Fringe.mat");
-        greenMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Grass/Green.mat");
-        roughMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Grass/Rough.mat");
-        firstCutMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Grass/FirstCut.mat");
-        teeMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Grass/TeeBox.mat");
-        sandMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Grass/Sand.mat");
-        riverMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Grass/SGRiverbeds.mat");
+        fairwayMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Resources/Materials/Fairway.mat");
+        fringeMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Resources/Materials/Fringe.mat");
+        greenMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Resources/Materials/Green.mat");
+        roughMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Resources/Materials/Rough.mat");
+        firstCutMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Resources/Materials/FirstCut.mat");
+        teeMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Resources/Materials/Tee.mat");
+        sandMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Resources/Materials/Sand.mat");
+        riverMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Resources/Materials/LakeRiverBed.mat");
     }
     
     private void OnGUI()
