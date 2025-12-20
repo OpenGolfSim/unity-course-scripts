@@ -114,6 +114,7 @@ public class ObjImportItem
 public class ObjImportGroup
 {
     public string prefix;
-    public List<string> objPaths = new List<string>();
+    // public List<string> objPaths = new List<string>();
+    public List<OpenGolfSimOBJImport.ImportedMesh> objMeshes = new List<OpenGolfSimOBJImport.ImportedMesh>();
     public Material assignedMaterial;
 }

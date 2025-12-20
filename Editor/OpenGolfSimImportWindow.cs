@@ -69,7 +69,7 @@ public class OpenGolfSimImportWindow : EditorWindow
 
         GUILayout.BeginHorizontal();
 
-        GUILayout.Label("Mesh Folder", EditorStyles.boldLabel);
+        GUILayout.Label("Mesh path", EditorStyles.boldLabel);
         
         if (!string.IsNullOrEmpty(selectedFolderPath) && objImportGroups.Count > 0)
         {
@@ -79,12 +79,15 @@ public class OpenGolfSimImportWindow : EditorWindow
                 selectedFolderPath = null;
             }
         } else {
-            if (GUILayout.Button("Select Folder"))
+            if (GUILayout.Button("Select OBJ File"))
             {
-                string folderPath = EditorUtility.OpenFolderPanel("Select Folder", "", "");
-                if (!string.IsNullOrEmpty(folderPath))
+                // string folderPath = EditorUtility.OpenFolderPanel("Select Folder", "", "");
+                string objPath = EditorUtility.OpenFilePanel("Select OBJ", "", "obj");
+                if (!string.IsNullOrEmpty(objPath))
                 {
-                    selectedFolderPath = folderPath;
+                    selectedFolderPath = objPath;
+                    Debug.Log($"objPath: {objPath}");
+                    
                     ScanAndGroupObjFiles();
                 }
             }
@@ -112,7 +115,14 @@ public class OpenGolfSimImportWindow : EditorWindow
         {
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField(group.prefix, GUILayout.Width(100));
-            EditorGUILayout.LabelField(string.Join(", ", group.objPaths.ConvertAll(Path.GetFileName)), GUILayout.Width(300));
+            
+            List<string> meshNames = new List<string>();
+            foreach (var m in group.objMeshes)
+            {
+                meshNames.Add(m.name);
+            }
+            EditorGUILayout.LabelField(string.Join(", ", meshNames), GUILayout.Width(300));
+
             group.assignedMaterial = (Material)EditorGUILayout.ObjectField(group.assignedMaterial, typeof(Material), false, GUILayout.Width(200));
             EditorGUILayout.EndHorizontal();
         }
@@ -173,16 +183,24 @@ public class OpenGolfSimImportWindow : EditorWindow
 
   void ScanAndGroupObjFiles()
   {
-      objImportGroups.Clear();
-      objCount = 0;
-      string[] objFiles = Directory.GetFiles(selectedFolderPath, "*.obj");
-      // Group by prefix (before the first underscore)
-      Dictionary<string, ObjImportGroup> groupDict = new Dictionary<string, ObjImportGroup>();
-      foreach (var objPath in objFiles)
-      {
-          string fileName = Path.GetFileNameWithoutExtension(objPath).ToLower();
-          string[] parts = fileName.Split('_');
-          string prefix = (parts.Length > 1) ? parts[0] : fileName;
+    objImportGroups.Clear();
+    objCount = 0;
+    //   string[] objFiles = Directory.GetFiles(selectedFolderPath, "*.obj");
+    List<OpenGolfSimOBJImport.ImportedMesh> importedMeshes = OpenGolfSimOBJImport.ImportOBJ(selectedFolderPath);
+    Dictionary<string, ObjImportGroup> groupDict = new Dictionary<string, ObjImportGroup>();
+    foreach (OpenGolfSimOBJImport.ImportedMesh mesh in importedMeshes) {
+        Debug.Log($"mesh: {mesh.name}");
+        string[] parts = mesh.name.Split('_');
+        string prefix = (parts.Length > 1) ? parts[0] : mesh.name;
+
+    // }
+    // return;
+    //   // Group by prefix (before the first underscore)
+    //   foreach (var objPath in objFiles)
+    //   {
+    //       string fileName = Path.GetFileNameWithoutExtension(objPath).ToLower();
+    //       string[] parts = fileName.Split('_');
+    //       string prefix = (parts.Length > 1) ? parts[0] : fileName;
 
           // Find/create group
           if (!groupDict.TryGetValue(prefix, out ObjImportGroup group))
@@ -209,7 +227,8 @@ public class OpenGolfSimImportWindow : EditorWindow
 
               groupDict[prefix] = group;
           }
-          group.objPaths.Add(objPath);
+          group.objMeshes.Add(mesh);
+        //   group.objPaths.Add(objPath);
           objCount++;
       }
       objImportGroups = new List<ObjImportGroup>(groupDict.Values);
@@ -229,52 +248,23 @@ public class OpenGolfSimImportWindow : EditorWindow
         Debug.LogWarning($"Could not find ModelImporter for asset: {assetPath}");
     }
   }
-
-
+  
   IEnumerator ImportFiles() {
     yield return null;
-    int progressId = Progress.Start("Starting import...");
-
+    
     string folderName = Path.GetFileNameWithoutExtension(selectedFolderPath);
     GameObject parentObj = new GameObject(folderName);
 
-    int finished = 0;
     foreach (var group in objImportGroups) {
-
-
-        foreach (var objPath in group.objPaths) {
-            string fileName = Path.GetFileNameWithoutExtension(objPath);
-            // EditorUtility.DisplayProgressBar("Importing", $"Processing {finished} of {objImportGroups.Count} groups", finished / objImportGroups.Count);
-            float percent = (float)finished / (float)objCount;
-            string progressLabel = $"Importing {fileName} ({finished + 1} of {objCount}, {Mathf.Round(percent * 100)}%)";
-            // Debug.Log(progressLabel);
-
-            Progress.Report(progressId, percent, progressLabel);
-
-            yield return null;
-
-            // Debug.Log($"Importing mesh: {fileName}, {percent}");
-            // string fileName = Path.GetFileName(objPath);
-
-            // EditorGUILayout.LabelField(fileName);
-            // Inside your foreach loop over obj files:
-
-            // Skip if already exists
-            // if (GameObject.Find(fileName) != null)
-            //   continue;
-            // Debug.Log($"Importing mesh: {fileName}");
-
-            // string destPathAbsolute = Path.Combine(importFolderAbsolute, fileName);
-            // string destPathRelative = Path.Combine(importFolderRelative, fileName);
-
-
-            GameObject obj = new GameObject(fileName);
+        
+        foreach (var objMesh in group.objMeshes) {
+            GameObject obj = new GameObject(objMesh.name);
             obj.transform.SetParent(parentObj.transform);
 
             MeshFilter mf = obj.AddComponent<MeshFilter>();
-            Mesh mesh = OpenGolfSimOBJImport.ImportOBJ(objPath);
-            mesh.name = fileName;
-            mf.mesh = mesh;
+            // Mesh mesh = OpenGolfSimOBJImport.ImportOBJ(objPath);
+            // mesh.name = objMesh.name;
+            mf.mesh = objMesh.mesh;
 
             MeshRenderer meshRenderer = obj.AddComponent<MeshRenderer>();
             meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
@@ -284,19 +274,77 @@ public class OpenGolfSimImportWindow : EditorWindow
             
             MeshCollider collider = obj.AddComponent<MeshCollider>();
             collider.sharedMesh = null; // clear first!
-            collider.sharedMesh = mesh;
+            collider.sharedMesh = objMesh.mesh;
 
-            finished += 1;
         }
     }
-    Debug.Log("Import finished");
-    // EditorUtility.ClearProgressBar();
-    Progress.Remove(progressId);
-
-    Vector3 eulerAngles = new Vector3(180, 0, 0); // 90 degrees around the Y-axis
-    parentObj.transform.rotation = Quaternion.Euler(eulerAngles);
-    parentObj.transform.position = new Vector3(0, 0, 0);
   }
+//   IEnumerator ImportFiles() {
+//     yield return null;
+//     int progressId = Progress.Start("Starting import...");
+
+//     string folderName = Path.GetFileNameWithoutExtension(selectedFolderPath);
+//     GameObject parentObj = new GameObject(folderName);
+
+//     int finished = 0;
+//     foreach (var group in objImportGroups) {
+
+
+//         foreach (var objPath in group.objPaths) {
+//             string fileName = Path.GetFileNameWithoutExtension(objPath);
+//             // EditorUtility.DisplayProgressBar("Importing", $"Processing {finished} of {objImportGroups.Count} groups", finished / objImportGroups.Count);
+//             float percent = (float)finished / (float)objCount;
+//             string progressLabel = $"Importing {fileName} ({finished + 1} of {objCount}, {Mathf.Round(percent * 100)}%)";
+//             // Debug.Log(progressLabel);
+
+//             Progress.Report(progressId, percent, progressLabel);
+
+//             yield return null;
+
+//             // Debug.Log($"Importing mesh: {fileName}, {percent}");
+//             // string fileName = Path.GetFileName(objPath);
+
+//             // EditorGUILayout.LabelField(fileName);
+//             // Inside your foreach loop over obj files:
+
+//             // Skip if already exists
+//             // if (GameObject.Find(fileName) != null)
+//             //   continue;
+//             // Debug.Log($"Importing mesh: {fileName}");
+
+//             // string destPathAbsolute = Path.Combine(importFolderAbsolute, fileName);
+//             // string destPathRelative = Path.Combine(importFolderRelative, fileName);
+
+
+//             GameObject obj = new GameObject(fileName);
+//             obj.transform.SetParent(parentObj.transform);
+
+//             MeshFilter mf = obj.AddComponent<MeshFilter>();
+//             Mesh mesh = OpenGolfSimOBJImport.ImportOBJ(objPath);
+//             mesh.name = fileName;
+//             mf.mesh = mesh;
+
+//             MeshRenderer meshRenderer = obj.AddComponent<MeshRenderer>();
+//             meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
+//             if (group.assignedMaterial != null) {
+//                 meshRenderer.sharedMaterial = group.assignedMaterial;
+//             }
+            
+//             MeshCollider collider = obj.AddComponent<MeshCollider>();
+//             collider.sharedMesh = null; // clear first!
+//             collider.sharedMesh = mesh;
+
+//             finished += 1;
+//         }
+//     }
+//     Debug.Log("Import finished");
+//     // EditorUtility.ClearProgressBar();
+//     Progress.Remove(progressId);
+
+//     Vector3 eulerAngles = new Vector3(180, 0, 0); // 90 degrees around the Y-axis
+//     parentObj.transform.rotation = Quaternion.Euler(eulerAngles);
+//     parentObj.transform.position = new Vector3(0, 0, 0);
+//   }
 
 
 }
