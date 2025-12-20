@@ -223,6 +223,8 @@ public class OpenGolfSimImportWindow : EditorWindow
                   group.assignedMaterial = sandMaterial;
               } else if (prefix.Contains("river")) {
                   group.assignedMaterial = riverMaterial;
+              } else if (prefix.Contains("water")) {
+                  group.assignedMaterial = riverMaterial;
               }
 
               groupDict[prefix] = group;
