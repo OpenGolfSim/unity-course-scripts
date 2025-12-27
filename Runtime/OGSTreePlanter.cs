@@ -32,13 +32,14 @@ public class TreeInfo
     public int frequencyWeighting = 1;
     // public float treeScaleBase = 1f;
     // public float treeScaleVariation = 0f;
-    public Vector2 treeScaleRange = new(0.85f, 1.25f);
+    public Vector2 treeScaleRange = new Vector2(0.85f, 1.25f);
     [HideInInspector] public List<TreeLODGroup> lods = new();
     [HideInInspector] public float baseHeight = 1f;
     [HideInInspector] public float cullScreenRelativeHeight = 0.01f; // default
     [HideInInspector] public bool hasBillboard = false;
     [HideInInspector] public BillboardAsset billboardAsset = null;
     [HideInInspector] public Material billboardMaterial = null;
+    [HideInInspector] public bool initialized = false;
 }
 
 
@@ -55,21 +56,22 @@ public class OGSTreePlanter : MonoBehaviour
     public List<TreeInfo> trees = new List<TreeInfo>();
 
     [Header("Planting Settings")]
-    public int areaWidth = 256;
-    public int areaLength = 256;
     public float minDensity = 0.1f;
     public float maxDensity = 0.8f;
     public int randomSeedValue = 123;
-    public float maskToDensityMultiplier = 5f;
+    public float maskToDensityMultiplier = 0.8f;
     // public Vector2 treeScaleRange = new(0.85f, 1.25f);
-
+    
     [Header("Performance Tuning")]
     public float maxRenderDistance = 300f;
 
-    public bool autoPlantOnPlay = false;
+    // public bool autoPlantOnPlay = false;
     private Matrix4x4[] instanceBuffer = new Matrix4x4[MAX_BATCH];
     private List<Matrix4x4>[] lodBuckets = new List<Matrix4x4>[0];
-    public static Mesh BillboardQuad;
+    private static Mesh BillboardQuad;
+    private int areaWidth = 256;
+    private int areaLength = 256;
+
 
     const int MAX_BATCH = 1023;
 
@@ -113,10 +115,10 @@ public class OGSTreePlanter : MonoBehaviour
         // ExtractLODGroups(treeA);
         // ExtractLODGroups(treeB);
         // Optionally auto-plant
-        if (autoPlantOnPlay)
-        {
+        // if (autoPlantOnPlay)
+        // {
             PlantTrees();
-        }
+        // }
         #if UNITY_EDITOR
         // Ensure scene saves on change
         EditorApplication.update += RepaintSceneView;
@@ -467,5 +469,18 @@ public class OGSTreePlanter : MonoBehaviour
         float frustumHeight = 2.0f * dist * Mathf.Tan(fovRad * 0.5f); // How tall the camera 'window' is at dist
         float relativeHeight = objHeight / frustumHeight;      // Portion of screen vertically
         return relativeHeight;  // 1.0 = fills screen, 0.5 = half screen, etc.
+    }
+
+    void OnValidate() {
+        foreach (var tree in trees) {
+            if (tree != null && !tree.initialized) {
+                // Only set defaults when fields are at defaults
+                tree.frequencyWeighting = 1;
+                tree.treeScaleRange = new Vector2(0.85f, 1.25f);
+                tree.baseHeight = 1f;
+                tree.cullScreenRelativeHeight = 0.01f;
+                tree.initialized = true; // Mark as initialized, never overwrite again
+            }
+        }
     }
 }
