@@ -29,16 +29,23 @@ public class OpenGolfSimExportWindow : EditorWindow
   int selectedBundleIndex = 0;
   private string selectedFolderPath = "";
   // string[] platformNames = {"default (Build Target)", "win64", "osx"};
-  string[] platformNames = {"win64", "macos"};
+  bool enablePlatformWindows = true;
+  bool enablePlatformMacOS = true;
+  // string[] platformNames = {"win64", "macos"};
   string[] gameModes = {"Range", "Range Game", "Course"};
   string[] bundleNames;
   bool emptyBundleNames = true;
   bool startExport = false;
   bool isExporting = false;
+  private Dictionary<GameObject, bool> cameraObjectStates = new Dictionary<GameObject, bool>();
+  private bool camerasDeactivated = false;
 
   private void OnEnable()
   {
       RefreshBundleNames();
+      if (courseTitle == "") {
+        courseTitle = PlayerSettings.productName;
+      }
   }
 
   private void OnGUI()
@@ -106,9 +113,10 @@ public class OpenGolfSimExportWindow : EditorWindow
     GUILayout.BeginHorizontal();
     GUILayout.Label($"Course Title", GUILayout.Width(200));
     // use the product name as the default course title
-    courseTitle = GUILayout.TextField(PlayerSettings.productName);
-    // GUILayout.FlexibleSpace();
+    courseTitle = GUILayout.TextField(courseTitle);
     GUILayout.EndHorizontal();
+
+    // GUILayout.FlexibleSpace();
 
     EditorGUILayout.Space(10);
     
@@ -117,6 +125,17 @@ public class OpenGolfSimExportWindow : EditorWindow
     GUILayout.Label("Course Slug (AssetBundle)", GUILayout.Width(200));
 
     selectedBundleIndex = EditorGUILayout.Popup(selectedBundleIndex, bundleNames);
+    GUILayout.EndHorizontal();
+
+    EditorGUILayout.Space(10);
+
+    GUILayout.BeginHorizontal();
+    GUILayout.Label($"Platforms", GUILayout.Width(200));
+    GUILayout.BeginVertical();
+    enablePlatformWindows = EditorGUILayout.Toggle("Windows", enablePlatformWindows);
+    enablePlatformMacOS = EditorGUILayout.Toggle("MacOS", enablePlatformMacOS);
+    GUILayout.EndVertical();
+    
     GUILayout.EndHorizontal();
 
     if (emptyBundleNames) {
@@ -178,8 +197,8 @@ public class OpenGolfSimExportWindow : EditorWindow
         }
         else
         {
-          Debug.Log("platformName: " + platformNames[selectedPlatformIndex]);
-          Debug.Log("bundleName: " + bundleNames[selectedBundleIndex]);
+          // Debug.Log("platformName: " + platformNames[selectedPlatformIndex]);
+          // Debug.Log("bundleName: " + bundleNames[selectedBundleIndex]);
           Debug.Log("selectedFolderPath: " + selectedFolderPath);
           if (!startExport)
           {
@@ -222,10 +241,17 @@ public class OpenGolfSimExportWindow : EditorWindow
     yield return null;
     // export one per platform
     string bundleName = bundleNames[selectedBundleIndex];
-    foreach (var platform in platformNames)
-    {
-      ExportStart(platform, bundleName);
+    
+    DisableAllCameras();
+    yield return null;
+    if (enablePlatformWindows) {
+      ExportStart("win64", bundleName);
     }
+    if (enablePlatformMacOS) {
+      ExportStart("macos", bundleName);
+    }
+    yield return null;
+    // foreach (var platform in platformNames)
 
     CourseDataFile data = new CourseDataFile();
     data.slug = bundleName.ToLower();
@@ -239,6 +265,8 @@ public class OpenGolfSimExportWindow : EditorWindow
     string courseJSONFilePath = Path.Combine(selectedFolderPath, "course.json");
     File.WriteAllText(courseJSONFilePath, jsonString);
     Debug.Log($"Export Complete! Wrote course file to: {selectedFolderPath}");
+    
+    RestoreCameraStates();
 
     isExporting = false;
     startExport = false;    
@@ -281,5 +309,35 @@ public class OpenGolfSimExportWindow : EditorWindow
     Debug.Log($"AssetBundles built with target {target} to: " + selectedFolderPath);
 
     
+  }
+
+  public void DisableAllCameras()
+  {
+    cameraObjectStates.Clear();
+    foreach (Camera cam in Camera.allCameras)
+    {
+      GameObject camObj = cam.gameObject;
+      cameraObjectStates[camObj] = camObj.activeSelf;
+      camObj.SetActive(false);
+    }
+    camerasDeactivated = true;
+  }
+
+  /// <summary>
+  /// Restores the enabled state of cameras as recorded during disabling.
+  /// </summary>
+  public void RestoreCameraStates()
+  {
+    if (!camerasDeactivated) return;
+
+    foreach (var entry in cameraObjectStates)
+    {
+      if (entry.Key != null)
+      {
+        entry.Key.SetActive(entry.Value);
+      }
+    }
+    cameraObjectStates.Clear();
+    camerasDeactivated = false;
   }
 }

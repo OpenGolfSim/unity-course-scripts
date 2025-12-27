@@ -25,10 +25,63 @@ public class OpenGolfSimMenu : EditorWindow
         GetWindow<OpenGolfSimImportWindow>("OpenGolfSim Dev Toolkit: Import Meshes");
     }    
 
+    private const string menuPathTrees = "GameObject/OpenGolfSim/Create Tree Planter";
+    [MenuItem(menuPathTrees, false, 10)]
+    private static void CreatePlanter(MenuCommand menuCommand)
+    {
+        OGSTreePlanter existingRef = FindObjectOfType<OGSTreePlanter>();
+        if (existingRef != null) {
+            Debug.LogWarning("OGSTreePlanter already exists!");
+            bool result = EditorUtility.DisplayDialog(
+                "Warning", // Title of the dialog
+                "OGSTreePlanter already exists", // Message body
+                "Dismiss"
+            );
+            return;
+        }
+
+        // Create root GameObject
+        GameObject go = new GameObject("OGSTreePlant");
+
+        // Add the custom runtime component
+        go.AddComponent<OGSTreePlanter>();
+
+        // If the menu was invoked from a context (like creating as child), parent appropriately
+        GameObject parent = menuCommand.context as GameObject;
+        if (parent != null)
+        {
+            // Align to parent and set parent
+            GameObjectUtility.SetParentAndAlign(go, parent);
+        }
+        else
+        {
+            // Place at scene origin by default
+            go.transform.position = Vector3.zero;
+        }
+
+        // Register Undo so the action can be undone
+        Undo.RegisterCreatedObjectUndo(go, "Create Course Details");
+
+        // Select the newly created object
+        Selection.activeGameObject = go;
+    }
+
     private const string menuPath = "GameObject/OpenGolfSim/Create Course Details";
     [MenuItem(menuPath, false, 10)]
     private static void Create(MenuCommand menuCommand)
     {
+        OGSCourseData existingRef = FindObjectOfType<OGSCourseData>();
+        if (existingRef != null) {
+            Debug.LogWarning("OGSCourseData already exists!");
+            bool result = EditorUtility.DisplayDialog(
+                "Warning", // Title of the dialog
+                "OGSCourseData already exists", // Message body
+                "Dismiss"
+            );
+            return;
+        }
+
+
         // Create root GameObject
         GameObject go = new GameObject("OGSCourseData");
 
