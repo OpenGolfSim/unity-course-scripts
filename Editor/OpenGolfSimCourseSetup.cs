@@ -154,6 +154,11 @@ public class OpenGolfSimCourseSetup : Editor
 
         EditorGUILayout.Space();
 
+        if (GUILayout.Button("Re-snap All Ground Positions (Y)"))
+        {
+            Debug.Log("Snap ground values");
+            SnapAllGroundPositions();
+        }
         // Small utility buttons
         EditorGUILayout.BeginHorizontal();
         
@@ -187,6 +192,42 @@ public class OpenGolfSimCourseSetup : Editor
         serializedObject.ApplyModifiedProperties();
     }
 
+    private void SnapAllGroundPositions() {
+        OGSCourseData gc = (OGSCourseData)target;
+        // Make sure we have up-to-date serialized properties
+        serializedObject.Update();
+        for (int i = 0; i < holesProp.arraySize; i++)
+        {
+            SerializedProperty holeProp = holesProp.GetArrayElementAtIndex(i);
+            SerializedProperty teeProp = holeProp.FindPropertyRelative("teeLocalPosition");
+            SerializedProperty teeGreenProp = holeProp.FindPropertyRelative("teeGreenPosition");
+            SerializedProperty holePosProp = holeProp.FindPropertyRelative("holeLocalPosition");
+            SerializedProperty aimProp = holeProp.FindPropertyRelative("aimLocalPosition");
+
+            Vector3 teeWhitePosition = teeProp.vector3Value;
+            Vector3 teeGreenPosition = teeGreenProp.vector3Value;
+            Vector3 holePosition = holePosProp.vector3Value;
+            Vector3 aimPosition = aimProp.vector3Value;
+            
+            float snappedYWhite = GetGroundY(teeWhitePosition, gc);
+            teeWhitePosition.y = snappedYWhite;
+            teeProp.vector3Value = gc.transform.InverseTransformPoint(teeWhitePosition);
+            
+            float snappedYGreen = GetGroundY(teeGreenPosition, gc);
+            teeGreenPosition.y = snappedYGreen;
+            teeGreenProp.vector3Value = gc.transform.InverseTransformPoint(teeGreenPosition);
+            
+            float snappedYHole = GetGroundY(holePosition, gc);
+            holePosition.y = snappedYHole;
+            holePosProp.vector3Value = gc.transform.InverseTransformPoint(holePosition);
+            
+            float snappedYAim = GetGroundY(aimPosition, gc);
+            aimPosition.y = snappedYAim;
+            aimProp.vector3Value = gc.transform.InverseTransformPoint(aimPosition);
+
+            serializedObject.ApplyModifiedProperties();
+        }
+    }
     // Scene GUI for interactive positioning
     private void OnSceneGUI()
     {

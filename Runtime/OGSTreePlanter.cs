@@ -294,7 +294,7 @@ public class OGSTreePlanter : MonoBehaviour
         // Debug.Log($"Planted {planted} trees");
         int idx = 0;
         foreach (var tree in trees) {
-            Debug.Log($"tree {idx} has {tree.lods[0].matrices.Count} lods");
+            Debug.Log($"tree {idx} has {tree.lods[0].matrices.Count} locations");
             idx++;
         }
         // Debug.Log($"treeB has {treeB.lods[0].matrices.Count} lods");
