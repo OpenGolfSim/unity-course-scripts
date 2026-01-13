@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEditor;
 using System.IO;
 using System;
@@ -31,6 +32,9 @@ public class OpenGolfSimExportWindow : EditorWindow
   // string[] platformNames = {"default (Build Target)", "win64", "osx"};
   bool enablePlatformWindows = true;
   bool enablePlatformMacOS = true;
+  bool enablePlatformiOS = false;
+  bool enablePlatformAndroid = false;
+  bool enablePlatformWebGL = false;
   // string[] platformNames = {"win64", "macos"};
   string[] gameModes = {"Range", "Range Game", "Course"};
   string[] bundleNames;
@@ -131,9 +135,22 @@ public class OpenGolfSimExportWindow : EditorWindow
 
     GUILayout.BeginHorizontal();
     GUILayout.Label($"Platforms", GUILayout.Width(200));
+
+
     GUILayout.BeginVertical();
     enablePlatformWindows = EditorGUILayout.Toggle("Windows", enablePlatformWindows);
     enablePlatformMacOS = EditorGUILayout.Toggle("MacOS", enablePlatformMacOS);
+    
+    var renderPipelineAsset = GraphicsSettings.currentRenderPipeline;
+    if (renderPipelineAsset != null) {
+      string pipelineName = renderPipelineAsset.GetType().Name;
+      if (pipelineName.Contains("UniversalRenderPipelineAsset")) {
+
+        enablePlatformiOS = EditorGUILayout.Toggle("iOS", enablePlatformiOS);
+        enablePlatformAndroid = EditorGUILayout.Toggle("Android", enablePlatformAndroid);
+        enablePlatformWebGL = EditorGUILayout.Toggle("Web", enablePlatformWebGL);
+      }
+    }
     GUILayout.EndVertical();
     
     GUILayout.EndHorizontal();
@@ -250,6 +267,15 @@ public class OpenGolfSimExportWindow : EditorWindow
     if (enablePlatformMacOS) {
       ExportStart("macos", bundleName);
     }
+    if (enablePlatformiOS) {
+      ExportStart("ios", bundleName);
+    }
+    if (enablePlatformAndroid) {
+      ExportStart("android", bundleName);
+    }
+    if (enablePlatformWebGL) {
+      ExportStart("webgl", bundleName);
+    }
     yield return null;
     // foreach (var platform in platformNames)
 
@@ -280,6 +306,12 @@ public class OpenGolfSimExportWindow : EditorWindow
       target = BuildTarget.StandaloneWindows64;
     } else if (targetPlatform == "macos") {
       target = BuildTarget.StandaloneOSX;
+    } else if (targetPlatform == "ios") {
+      target = BuildTarget.iOS;
+    } else if (targetPlatform == "android") {
+      target = BuildTarget.Android;
+    } else if (targetPlatform == "webgl") {
+      target = BuildTarget.WebGL;
     }
     // string assetBundleDirectory = "Assets/AssetBundles";
     // Debug.Log("Export asset bundle to: " + assetBundleDirectory);
