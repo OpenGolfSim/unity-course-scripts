@@ -16,6 +16,7 @@ public class CourseDataFile
     public int version;
     public string description;
     public int gameMode;
+    public int engine;
 }
 
 public class OpenGolfSimExportWindow : EditorWindow
@@ -141,15 +142,10 @@ public class OpenGolfSimExportWindow : EditorWindow
     enablePlatformWindows = EditorGUILayout.Toggle("Windows", enablePlatformWindows);
     enablePlatformMacOS = EditorGUILayout.Toggle("MacOS", enablePlatformMacOS);
     
-    var renderPipelineAsset = GraphicsSettings.currentRenderPipeline;
-    if (renderPipelineAsset != null) {
-      string pipelineName = renderPipelineAsset.GetType().Name;
-      if (pipelineName.Contains("UniversalRenderPipelineAsset")) {
-
-        enablePlatformiOS = EditorGUILayout.Toggle("iOS", enablePlatformiOS);
-        enablePlatformAndroid = EditorGUILayout.Toggle("Android", enablePlatformAndroid);
-        enablePlatformWebGL = EditorGUILayout.Toggle("Web", enablePlatformWebGL);
-      }
+    if (IsUniversal()) {
+      enablePlatformiOS = EditorGUILayout.Toggle("iOS", enablePlatformiOS);
+      enablePlatformAndroid = EditorGUILayout.Toggle("Android", enablePlatformAndroid);
+      enablePlatformWebGL = EditorGUILayout.Toggle("Web", enablePlatformWebGL);
     }
     GUILayout.EndVertical();
     
@@ -240,6 +236,15 @@ public class OpenGolfSimExportWindow : EditorWindow
     // }
   }
 
+  private bool IsUniversal()
+  {
+    var renderPipelineAsset = GraphicsSettings.currentRenderPipeline;
+    if (renderPipelineAsset == null) {
+      return false;
+    }
+    return renderPipelineAsset.GetType().Name.Contains("UniversalRenderPipeline");
+  }
+
   private void RefreshBundleNames()
   {
       bundleNames = AssetDatabase.GetAllAssetBundleNames();
@@ -285,6 +290,11 @@ public class OpenGolfSimExportWindow : EditorWindow
     data.description = $"This course file was generated with OGS Developer Toolkit";
     data.name = courseTitle;
     data.gameMode = selectedGameMode;
+    data.engine = 0;
+    
+    if (IsUniversal()) {
+      data.engine = 1;
+    }
 
     string jsonString = JsonUtility.ToJson(data, true);
 
