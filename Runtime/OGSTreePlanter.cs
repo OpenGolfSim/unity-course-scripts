@@ -60,6 +60,7 @@ public class OGSTreePlanter : MonoBehaviour
     public float maxDensity = 0.8f;
     public int randomSeedValue = 123;
     public float maskToDensityMultiplier = 0.8f;
+    public float yOffset = 0.0f;
     // public Vector2 treeScaleRange = new(0.85f, 1.25f);
     
     [Header("Performance Tuning")]
@@ -269,8 +270,10 @@ public class OGSTreePlanter : MonoBehaviour
 
             float worldX = ((float)x / areaWidth) * tw + terrain.transform.position.x + Random.Range(-0.5f, 0.5f);
             float worldZ = ((float)z / areaLength) * tl + terrain.transform.position.z + Random.Range(-0.5f, 0.5f);
+            
             float worldY = terrain.SampleHeight(new Vector3(worldX, 0, worldZ)) + terrain.transform.position.y;
-
+            worldY += yOffset;
+            
             // bool useA = Random.value > 0.5f;
             TreeInfo tree = GetRandomTree(Random.value);
             float scale = Random.Range(tree.treeScaleRange.x, tree.treeScaleRange.y);
